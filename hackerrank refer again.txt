@@ -3,3 +3,7 @@
 1]Climbing the Leaderboard (Medium)
 2] Counting Valleys 
 3]Picking Numbers type me hamesha ya to tera array out of bound exception aata hai infinite loop
+4]Gives an equation for any type of integer sequences(Closed form) 
+  ie the online encyclopedia of integer sequences the link is below
+    
+    https://oeis.org
