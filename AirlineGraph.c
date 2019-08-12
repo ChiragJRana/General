@@ -1,11 +1,22 @@
+/*           STATES
+ -1  -----> Not Explored (initial)
+  0  -----> Added to queue(waiting)
+  1  -----> Visited 
+
+*/
+
+/*
+print()             -----> To print NODES in the system which are Cities , Adjacency array Adj[i] 
+print1()            -----> To print all the VERTEX from a given nodes ie possible ways from a particular node 
+printRoute()        -----> To print the path which is found for a particular source and destination city 
+
+ */
+
+
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
 
-// state 
-// -1  -----> Not Explored (initial)
-//  0  -----> Added to queue(waiting)
-//  1  -----> Visited 
 struct Cities                   //Represents a vertex 
 {
    char cityname[20];
@@ -13,6 +24,7 @@ struct Cities                   //Represents a vertex
    struct Cities *next;               //*next vertex in the linked list of vertices
    struct Cities *parent;
    int state;
+   int state2;
 }*start,*end;
 
 struct ConnectedCities          //Represents  an edge
@@ -22,6 +34,7 @@ struct ConnectedCities          //Represents  an edge
     struct ConnectedCities *next;  //next edge of the adjacency list 
 };
 
+//For BFS purpose
 struct queue
 {
     char name[20];
@@ -34,14 +47,28 @@ struct queue *rear=NULL;
 void enque(struct Cities *);
 struct Cities *dequeue();
 
-void addCities(char name[]);
-struct Cities *searchCity(char name[]);
-void print();
-void addRoute(char [] ,char []);
-void print1(struct ConnectedCities *);
 int isEmpty();
 
+//End of BFS Interface
+
+
+//Controls for user
+void addCities(char name[]);
+struct Cities *searchCity(char name[]);
+void addRoute(char [] ,char []);
 int findRoute(struct Cities *, struct Cities *);  //returns 1 if route exists else 0
+
+// End of Control Interface
+
+
+// For Printing Different Content
+void print();
+void print1(struct ConnectedCities *);
+void printRoute(struct Cities *); 
+//End Of print interface
+
+void bfs(struct Cities *source);       //for reusablity
+
 
 int main()
 {
@@ -55,9 +82,10 @@ int main()
     {
         printf("1] AddCities\n");
         printf("2] Searrch\n");
-        printf("3] Print\n");
+        printf("3] Print (cities array pointers down)\n");
         printf("4] AddRoute\n");
-        printf("5] PrintRoute\n");
+        printf("5] Print1(connected cities)\n");
+        printf("6] FindRoute\n");
         printf("Enter Your Choice\n");
         scanf("%d",&choice);
         switch(choice)
@@ -99,6 +127,43 @@ int main()
                 break;
 
             }
+
+            case 6:
+            {
+                printf("enter the source city \n");
+                scanf(" %s",name);
+                struct Cities *s= searchCity(name);
+                printf("enter the destination city \n");
+                scanf(" %s",destination);
+                struct Cities *d= searchCity(destination);
+                int returnValue= findRoute(s,d);
+
+                int count=0;
+                if(returnValue == 1)
+                    {
+
+                        count++;
+                      
+
+                        if(count)
+                            {
+                                printf("Clearing the state to initial\n\n");
+                                struct Cities *start = searchCity("Pune");
+                                bfs(start);
+                                break;
+                            }
+                    }
+                else
+                {
+                    printf("No path exists \n");
+                    break;   
+                }
+                
+                break;
+            }
+
+            default:
+                break;
         }
 
         printf("if more press 1 else 0\n");
@@ -119,6 +184,7 @@ void addCities(char name[])
     temp->next=NULL;
     temp->parent=NULL;
     temp->state=-1;
+    temp->state2=-1;
    
     if(start==NULL)
     {
@@ -159,6 +225,7 @@ void print()
     }
 }
 
+
 void print1(struct ConnectedCities *start)
 {
     struct ConnectedCities *traverse =start;
@@ -197,6 +264,8 @@ void addRoute(char source[],char destination[])
     temp->destinationloc = destinationAddress;
     temp->next =NULL;
 
+    //IF no connected cities then insert it as the first connected city else
+    // iterate connected cities till you reach the last element
     if(sourceAddress->firstEdge ==NULL)
     {
         sourceAddress->firstEdge = temp;
@@ -262,7 +331,8 @@ int findRoute(struct Cities *source, struct Cities *destination)
         p->state =1;        // Visited state
         if((strcmp(destination->cityname,p->cityname))==0)
             {
-                printf("Path Found \n");
+                printf("Path Found \n\n");
+                printRoute(p);
                 return 1;
             }
 
@@ -277,7 +347,9 @@ int findRoute(struct Cities *source, struct Cities *destination)
             {
                  enque(temp);
                  temp->state=0;
-                 temp->parent=p;
+                 temp->parent=p;        //setting current level parent as previous level
+                                        //ie if CL = 1  CL[1]=parent=CL[0]
+                                        //if i is current level parent will be i-1 level
             }
 
             trav=trav->next;
@@ -291,17 +363,85 @@ int findRoute(struct Cities *source, struct Cities *destination)
 
     if(!isEmpty())
     {
-        printf("No path exists \n");
+        
         return 0;
     }
 
 }
 
 
-int isEmpty()
+int isEmpty()               //queue empty or not if empty return 0 else 1
 {
     if(front == NULL)
         return 0;
     else
         return 1;
+}
+
+
+void bfs(struct Cities *source)         //for code reusability
+{
+    enque(source);
+    source->state2=0;       //waiting state
+
+    source->state=-1;       //setting initial values 
+    source->parent=NULL;    //setting initial values
+    
+    struct Cities *temp;
+    struct Cities *p; //represents parent level of current level
+
+    while(isEmpty())
+    {
+        p=dequeue();
+        p->state2=1;
+        
+        p->state =-1; //setting initial values
+        p->parent=NULL;     
+        
+        printf("%s ---> ",p->cityname);  
+       
+        struct ConnectedCities *trav;
+        trav = p->firstEdge;
+
+        while(trav!=NULL)
+        {
+            temp= trav->destinationloc;
+
+            if(temp->state2 == -1)       //if in initial state then enqueue thema
+            {
+                 enque(temp);
+                 temp->state2=0;
+
+                 temp->state=-1;
+                 temp->parent=NULL;
+            }
+            trav=trav->next;
+               
+                
+        }
+        
+        
+        
+    }
+
+    printf("\n\n");
+    if(!isEmpty())
+    {
+        printf("No path exists \n");
+        return ;
+    }
+
+}
+
+void printRoute(struct Cities *dest)
+{
+    struct Cities *temp = dest;
+
+    while(temp!=NULL)
+    {
+        printf("%s <---",temp->cityname);
+        temp=temp->parent;
+    }
+
+    printf(" Source City\n\n");
 }
