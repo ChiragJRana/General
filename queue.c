@@ -15,8 +15,9 @@ int dequeue();
 int main()
 {
     int flag=1,choice;
-    
-        
+  
+    //      This whole part is just to test the code   
+  /*  
     while(flag)
     {
         printf("1]enque\n");
@@ -40,7 +41,7 @@ int main()
         
         printf("more?\n\n");
         scanf("%d",&flag);
-
+*/
     }
 
     return 0;
